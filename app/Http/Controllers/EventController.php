@@ -1,22 +1,27 @@
 <?php
+
 namespace App\Http\Controllers;
-use App\Http\Controllers\Controller;
+
 use App\Models\Event;
 use App\Models\Category;
-use Illuminate\Http\Request;
 
 class EventController extends Controller
 {
-    function show($id){
-        $event = Event::with('category')->findOrFail($id);
+    // UPDATED: Pakai Route Model Binding (Event $event) bukan $id manual
+    public function show(Event $event)
+    {
         $categories = Category::all();
         return view('event-detail', compact('event', 'categories'));
     }
-    function checkout(){
+
+    public function checkout()
+    {
         $categories = Category::all();
         return view('checkout', compact('categories'));
     }
-    function ticket(){
+
+    public function ticket()
+    {
         $categories = Category::all();
         return view('ticket', compact('categories'));
     }

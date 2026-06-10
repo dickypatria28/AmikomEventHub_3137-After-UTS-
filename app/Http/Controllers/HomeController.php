@@ -16,7 +16,6 @@ class HomeController extends Controller
         $partners = Partner::all();
 
         $query = Event::with('category')
-            ->where('date', '>=', now())
             ->orderBy('date', 'asc');
 
         if ($request->filled('category')) {

@@ -62,14 +62,14 @@
 
         <div class="mb-12 flex flex-wrap gap-3 justify-center items-center px-4 py-8 bg-gradient-to-r from-slate-50 to-indigo-50 rounded-2xl border border-slate-200">
             <span class="text-sm font-bold text-slate-600 uppercase tracking-wider">Filter by:</span>
-            
-            <a href="/" 
+
+            <a href="/"
                class="px-6 py-2.5 rounded-full font-semibold text-sm transition-all duration-300 transform hover:scale-105 {{ !request('category') ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white text-slate-700 border border-slate-300 hover:border-indigo-400 hover:bg-indigo-50' }}">
                 ✓ Semua Kategori
             </a>
-            
+
             @foreach($categories as $cat)
-                <a href="/?category={{ $cat->slug }}" 
+                <a href="/?category={{ $cat->slug }}"
                     class="px-6 py-2.5 rounded-full font-semibold text-sm transition-all duration-300 transform hover:scale-105 {{ request('category') === $cat->slug ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-white text-slate-700 border border-slate-300 hover:border-indigo-400 hover:bg-indigo-50' }}">
                     {{ $cat->name }}
                 </a>
@@ -79,14 +79,13 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             @foreach ($events as $event)
                 <div class="group bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-300 overflow-hidden">
-                    
+
                     <div class="relative overflow-hidden aspect-[3/4] bg-slate-100">
-                        <img 
-                            src="{{ Str::startsWith($event->poster_path, 'events/') ? asset('storage/' . $event->poster_path) : asset('assets/' . $event->poster_path) }}"                            alt="{{ $event->title }}"
-                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                            onerror="this.onerror=null;this.src='https://via.placeholder.com/400x600?text=Harap+Ubah+Database';"
-                        >
-                        
+                        {{-- UPDATED: Menggunakan accessor poster_url dari Model --}}
+                        <img src="{{ $event->poster_url }}"
+                            alt="{{ $event->title }}"
+                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+
                         <div class="absolute top-4 left-4 px-3 py-1 bg-white/90 backdrop-blur rounded-lg text-xs font-bold uppercase text-indigo-600">
                             {{ $event->category->name }}
                         </div>
@@ -111,7 +110,8 @@
                                 Rp {{ number_format($event->price, 0, ',', '.') }}
                             </span>
 
-                            <a href="{{ url('event/' . $event->id) }}" class="px-5 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-bold hover:bg-indigo-600 hover:text-white transition">
+                            {{-- UPDATED: Menggunakan route() yang dinamis --}}
+                            <a href="{{ route('events.show', $event->id) }}" class="px-5 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-bold hover:bg-indigo-600 hover:text-white transition">
                                 Lihat Detail
                             </a>
                         </div>
@@ -126,15 +126,14 @@
             <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">
                 Partner Pendukung AmikomEventHub
             </h2>
-            
+
             <div class="flex flex-wrap justify-center items-center gap-10 md:gap-16">
                 @forelse($partners as $partner)
                     <div class="flex flex-col items-center group">
-                        {{-- Merender file logo berdasarkan data URL dari Database --}}
-                        <img src="{{ $partner->logo_url }}" alt="{{ $partner->name }}" 
+                        <img src="{{ $partner->logo_url }}" alt="{{ $partner->name }}"
                              class="h-12 object-contain filter grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-105"
                              onerror="this.onerror=null;this.src='https://placehold.co/150x60?text={{ urlencode($partner->name) }}'">
-                        
+
                         <span class="text-xs text-slate-400 mt-3 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             {{ $partner->name }}
                         </span>

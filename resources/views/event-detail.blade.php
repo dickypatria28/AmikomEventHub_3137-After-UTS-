@@ -5,9 +5,9 @@
     <!-- Left: Poster -->
     <div class="lg:col-span-1">
         <div class="sticky top-32">
-            <img src="{{ Str::startsWith($event->poster_path, 'events/') ? asset('storage/' . $event->poster_path) : asset('assets/' . $event->poster_path) }}" alt="{{ $event->title }}"
-                class="w-full rounded-[2.5rem] shadow-2xl border-8 border-white"
-                onerror="this.onerror=null;this.src='https://placehold.co/400x600?text={{ urlencode($event->title) }}'">
+            {{-- UPDATED: Menggunakan accessor poster_url dari Model --}}
+            <img src="{{ $event->poster_url }}" alt="{{ $event->title }}"
+                class="w-full rounded-[2.5rem] shadow-2xl border-8 border-white object-cover aspect-[3/4]">
             <div class="mt-8 p-6 bg-white rounded-3xl border border-slate-100 shadow-sm">
                 <h4 class="font-bold mb-4">Penyelenggara</h4>
                 <div class="flex items-center gap-4">
@@ -47,7 +47,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
-                    <span>{{ $event->location ?? 'Yogyakarta' }}</span>
+                    <span>{{ $event->location }}</span>
                 </div>
             </div>
         </div>
@@ -72,11 +72,13 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        Sisa stok: <span class="font-bold underline">{{ $event->quota ?? '∞' }} Tiket lagi!</span>
+                        {{-- UPDATED: $event->quota -> $event->stock --}}
+                        Sisa stok: <span class="font-bold underline">{{ $event->stock }} Tiket lagi!</span>
                     </p>
                 </div>
                 <div>
-                    <a href="{{ url('checkout') }}"
+                    {{-- UPDATED: Link checkout dinamis dengan id event --}}
+                    <a href="{{ url('checkout/' . $event->id) }}"
                         class="inline-block px-10 py-5 bg-white text-indigo-600 rounded-2xl font-black text-xl hover:scale-105 transition-transform shadow-xl">
                         Pesan Sekarang
                     </a>

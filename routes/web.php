@@ -10,7 +10,10 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\AuthController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/event/{id}', [EventController::class, 'show'])->name('events.show');
+
+// UPDATED: Route dinamis pakai Route Model Binding
+Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
+
 Route::get('/checkout', [EventController::class, 'checkout'])->name('checkout');
 Route::get('/my-ticket', [EventController::class, 'ticket'])->name('ticket');
 
