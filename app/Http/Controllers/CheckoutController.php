@@ -19,7 +19,7 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Menyimpan data transaksi ke database.
+     * Menyimpan data transaksi & generate Snap Token Midtrans.
      */
     public function store(Request $request, Event $event)
     {
@@ -37,7 +37,7 @@ class CheckoutController extends Controller
 
         // 3. Generate Kode TRX (Unik)
         $orderId    = 'TRX-' . time() . '-' . Str::random(5);
-        $totalPrice = $event->price + 5000; // Menambahkan biaya admin (dummy)
+        $totalPrice = $event->price + 5000;
 
         // 4. Merekam Transaksi ke Database
         $transaction = Transaction::create([
@@ -47,10 +47,78 @@ class CheckoutController extends Controller
             'customer_email' => $request->customer_email,
             'customer_phone' => $request->customer_phone,
             'total_price'    => $totalPrice,
-            'status'         => 'pending', // Status Awal
+            'status'         => 'pending',
         ]);
 
-        // 5. Arahkan ke halaman utama (sementara)
-        return redirect('/');
+        // --- INTEGRASI SNAP MIDTRANS ---
+
+        // Konfigurasi Kredensial Environment Midtrans
+        \Midtrans\Config::$serverKey    = env('MIDTRANS_SERVER_KEY');
+        \Midtrans\Config::$isProduction = false;
+        \Midtrans\Config::$isSanitized  = true;
+        \Midtrans\Config::$is3ds        = true;
+
+        // Susun Paket Array Data Transaksi
+        $params = [
+            'transaction_details' => [
+                'order_id'     => $orderId,
+                'gross_amount' => $totalPrice,
+            ],
+            'customer_details' => [
+                'first_name' => $request->customer_name,
+                'email'      => $request->customer_email,
+                'phone'      => $request->customer_phone,
+            ],
+        ];
+
+        try {
+            // Generate Snap Token
+            $snapToken = \Midtrans\Snap::getSnapToken($params);
+
+            // Update rekaman transaksi dengan snap_token
+            $transaction->update(['snap_token' => $snapToken]);
+
+            // Redirect ke halaman pembayaran
+            return redirect()->route('checkout.payment', $transaction->order_id);
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal memproses pembayaran jaringan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Menampilkan halaman popup pembayaran Midtrans.
+     */
+    public function payment($order_id)
+    {
+        $categories  = \App\Models\Category::all();
+        $transaction = Transaction::with('event')->where('order_id', $order_id)->firstOrFail();
+
+        return view('checkout.payment', compact('transaction', 'categories'));
+    }
+
+    /**
+     * Menampilkan halaman sukses setelah pembayaran.
+     */
+    public function success($order_id)
+    {
+        $categories  = \App\Models\Category::all();
+        $transaction = Transaction::where('order_id', $order_id)->firstOrFail();
+
+        // Validasi status pembayaran dari Midtrans
+        \Midtrans\Config::$serverKey    = env('MIDTRANS_SERVER_KEY');
+        \Midtrans\Config::$isProduction = false;
+
+        try {
+            $midtransStatus = \Midtrans\Transaction::status($order_id);
+
+            if (in_array($midtransStatus->transaction_status, ['capture', 'settlement'])) {
+                $transaction->update(['status' => 'success']);
+            }
+        } catch (\Exception $e) {
+            return redirect()->route('home')->with('error', 'Transaksi tidak ditemukan atau gagal diproses oleh sistem pembayaran.');
+        }
+
+        return view('checkout.success', compact('transaction', 'categories'));
     }
 }
